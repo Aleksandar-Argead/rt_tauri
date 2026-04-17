@@ -2,15 +2,10 @@ mod server;
 
 use std::sync::Arc;
 
+use tauri::async_runtime;
 use tokio::sync::RwLock;
 
 use server::start_websocket_server;
-
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[derive(Default)]
 struct AppState {
@@ -27,8 +22,7 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle().clone();
 
-            // Start the WS server in background
-            tokio::spawn(async move {
+            async_runtime::spawn(async move {
                 if let Err(e) = start_websocket_server(app_handle).await {
                     eprintln!("WebSocket server error: {}", e);
                 }
