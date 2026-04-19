@@ -9,17 +9,15 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <>
+    <main className="h-screen w-screen overflow-hidden">
       <TooltipProvider>
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
-            <main className="h-dvh w-dvw overflow-hidden flex">
-              <Outlet />
-            </main>
+            <Outlet />
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>
-    </>
+    </main>
   );
 }

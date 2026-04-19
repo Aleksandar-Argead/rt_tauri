@@ -9,8 +9,56 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TimelineRouteImport } from './routes/timeline'
+import { Route as StateRouteImport } from './routes/state'
+import { Route as NetworkRouteImport } from './routes/network'
+import { Route as MmkvRouteImport } from './routes/mmkv'
+import { Route as MediaRouteImport } from './routes/media'
+import { Route as LogsRouteImport } from './routes/logs'
+import { Route as CustomRouteImport } from './routes/custom'
+import { Route as BenchRouteImport } from './routes/bench'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TimelineRoute = TimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StateRoute = StateRouteImport.update({
+  id: '/state',
+  path: '/state',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NetworkRoute = NetworkRouteImport.update({
+  id: '/network',
+  path: '/network',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MmkvRoute = MmkvRouteImport.update({
+  id: '/mmkv',
+  path: '/mmkv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MediaRoute = MediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomRoute = CustomRouteImport.update({
+  id: '/custom',
+  path: '/custom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BenchRoute = BenchRouteImport.update({
+  id: '/bench',
+  path: '/bench',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +67,144 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bench': typeof BenchRoute
+  '/custom': typeof CustomRoute
+  '/logs': typeof LogsRoute
+  '/media': typeof MediaRoute
+  '/mmkv': typeof MmkvRoute
+  '/network': typeof NetworkRoute
+  '/state': typeof StateRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bench': typeof BenchRoute
+  '/custom': typeof CustomRoute
+  '/logs': typeof LogsRoute
+  '/media': typeof MediaRoute
+  '/mmkv': typeof MmkvRoute
+  '/network': typeof NetworkRoute
+  '/state': typeof StateRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bench': typeof BenchRoute
+  '/custom': typeof CustomRoute
+  '/logs': typeof LogsRoute
+  '/media': typeof MediaRoute
+  '/mmkv': typeof MmkvRoute
+  '/network': typeof NetworkRoute
+  '/state': typeof StateRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bench'
+    | '/custom'
+    | '/logs'
+    | '/media'
+    | '/mmkv'
+    | '/network'
+    | '/state'
+    | '/timeline'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/bench'
+    | '/custom'
+    | '/logs'
+    | '/media'
+    | '/mmkv'
+    | '/network'
+    | '/state'
+    | '/timeline'
+  id:
+    | '__root__'
+    | '/'
+    | '/bench'
+    | '/custom'
+    | '/logs'
+    | '/media'
+    | '/mmkv'
+    | '/network'
+    | '/state'
+    | '/timeline'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BenchRoute: typeof BenchRoute
+  CustomRoute: typeof CustomRoute
+  LogsRoute: typeof LogsRoute
+  MediaRoute: typeof MediaRoute
+  MmkvRoute: typeof MmkvRoute
+  NetworkRoute: typeof NetworkRoute
+  StateRoute: typeof StateRoute
+  TimelineRoute: typeof TimelineRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/timeline': {
+      id: '/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/state': {
+      id: '/state'
+      path: '/state'
+      fullPath: '/state'
+      preLoaderRoute: typeof StateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/network': {
+      id: '/network'
+      path: '/network'
+      fullPath: '/network'
+      preLoaderRoute: typeof NetworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mmkv': {
+      id: '/mmkv'
+      path: '/mmkv'
+      fullPath: '/mmkv'
+      preLoaderRoute: typeof MmkvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/media': {
+      id: '/media'
+      path: '/media'
+      fullPath: '/media'
+      preLoaderRoute: typeof MediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom': {
+      id: '/custom'
+      path: '/custom'
+      fullPath: '/custom'
+      preLoaderRoute: typeof CustomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bench': {
+      id: '/bench'
+      path: '/bench'
+      fullPath: '/bench'
+      preLoaderRoute: typeof BenchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +217,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BenchRoute: BenchRoute,
+  CustomRoute: CustomRoute,
+  LogsRoute: LogsRoute,
+  MediaRoute: MediaRoute,
+  MmkvRoute: MmkvRoute,
+  NetworkRoute: NetworkRoute,
+  StateRoute: StateRoute,
+  TimelineRoute: TimelineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -16,9 +16,11 @@
 
     "baseUrl": ".",
     "paths": {
+      "@store/*": ["./src/store/*"],
+      "@components/*": ["./src/components/*"],
+      "@assets/*": ["./src/assets/*"],
       "@/*": ["./src/*"],
     },
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

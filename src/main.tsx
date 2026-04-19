@@ -1,11 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./main.css";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
-
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import "./main.css";
+import { TooltipProvider } from "@components/ui/tooltip";
+import { Toaster } from "@components/ui/sonner";
 
-export const RouterWithContext = () => {
+export function RouterWithContext() {
   const router = createRouter({
     routeTree,
     defaultPreload: "intent",
@@ -14,12 +15,15 @@ export const RouterWithContext = () => {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <TooltipProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </TooltipProvider>
     </>
   );
-};
+}
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterWithContext />
   </React.StrictMode>,
