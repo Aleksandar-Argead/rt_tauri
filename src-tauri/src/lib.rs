@@ -10,8 +10,8 @@ use server::start_websocket_server;
 #[derive(Default)]
 struct AppState {
     // For MVP: you can store connections here if needed
-    connections: std::collections::HashMap<String, ()>, // conn_id -> dummy
-                                                        // Later: timeline: Vec<Command>,
+    // connections: std::collections::HashMap<String, ()>, // conn_id -> dummy
+    // Later: timeline: Vec<Command>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

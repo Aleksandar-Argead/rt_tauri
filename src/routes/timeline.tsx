@@ -1,105 +1,71 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { format } from "date-fns";
-import { Search, Trash2, Filter } from "lucide-react";
+import { createFileRoute } from '@tanstack/react-router';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Search, Trash2 } from 'lucide-react';
+import { useStore } from '@store/useStore';
+import { AppHeader } from '@components/AppHeader';
+import { Field } from '@components/ui/field';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@components/ui/input-group';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { TimelineEventRow, TypeFilterDropdown } from '@components/timeline';
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-import { useStore } from "@store/useStore";
-import { AppHeader } from "@components/AppHeader";
-import { Field } from "@components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@components/ui/input-group";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@components/ui/dropdown-menu";
-
-const typeColors: Record<string, string> = {
-  "client.intro": "bg-blue-500",
-  "hello.client": "bg-blue-500",
-  log: "bg-emerald-500",
-  warn: "bg-amber-500",
-  error: "bg-red-500",
-  "state.action.complete": "bg-violet-500",
-  "state.action.dispatch": "bg-purple-500",
-  "api.response": "bg-cyan-500",
-  "bench.report": "bg-orange-500",
-  display: "bg-rose-500",
-  image: "bg-pink-500",
-};
-
-// All filterable types
-const filterableTypes: CommandType[] = [
-  "log",
-  "warn",
-  "error",
-  "state.action.complete",
-  "state.action.dispatch",
-  "api.response",
-  "bench.report",
-  "display",
-  "image",
-];
-
-export const Route = createFileRoute("/timeline")({
+export const Route = createFileRoute('/timeline')({
   component: TimelinePage,
 });
 
 function TimelinePage() {
-  const {
-    timeline,
-    searchTerm,
-    clearTimeline,
-    selectedConnectionId,
-    connections,
-    filters,
-    toggleTypeFilter,
-  } = useStore();
+  const { timeline, clearTimeline, selectedConnectionId, connections } = useStore();
 
-  // Base timeline (respect selected connection)
-  const baseTimeline = selectedConnectionId
-    ? timeline.filter((item) => item.connectionId === selectedConnectionId)
-    : timeline;
+  const [filters, setFilters] = useState<{ types: string[] }>({ types: [] });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Apply search + type filter
-  const filteredTimeline = baseTimeline.filter((item) => {
-    const matchesSearch =
-      !searchTerm ||
-      item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      JSON.stringify(item.payload ?? {})
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  const parentRef = useRef<HTMLDivElement>(null);
 
-    const matchesType =
-      filters.types.length === 0 || filters.types.includes(item.type);
+  const filteredTimeline = useMemo(() => {
+    const currentTimeline = selectedConnectionId ? timeline[selectedConnectionId] || [] : Object.values(timeline).flat();
 
-    return matchesSearch && matchesType;
+    const filtered = currentTimeline.filter((item) => {
+      const matchesSearch =
+        !searchTerm ||
+        item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        JSON.stringify(item.payload ?? {})
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      const matchesType = filters.types.length === 0 || filters.types.includes(item.type);
+
+      return matchesSearch && matchesType;
+    });
+
+    // Newest events first
+    return [...filtered].sort((a, b) => b.timestamp - a.timestamp);
+  }, [timeline, selectedConnectionId, searchTerm, filters.types]);
+
+  const toggleTypeFilter = (type: string) => {
+    setFilters((prev) => ({
+      types: prev.types.includes(type) ? prev.types.filter((t) => t !== type) : [...prev.types, type],
+    }));
+  };
+
+  const clearFilters = () => setFilters({ types: [] });
+
+  // Virtualizer setup
+  const virtualizer = useVirtualizer({
+    count: filteredTimeline.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 140, // ← Important: Adjust this to your average TimelineEventCard height
+    overscan: 8, // Render a few extra items for smooth scrolling
+    // Optional: enable dynamic measurement (more accurate but slightly heavier)
+    // measureElement: (element) => element?.getBoundingClientRect().height ?? 140,
   });
 
-  const getTypeColor = (type: string): string => {
-    return typeColors[type] || "bg-gray-500";
-  };
+  const virtualItems = virtualizer.getVirtualItems();
 
-  const formatPayload = (payload: any): string => {
-    if (!payload) return "—";
-    const str =
-      typeof payload === "object"
-        ? JSON.stringify(payload, null, 2)
-        : String(payload);
-    return str.length > 150 ? str.slice(0, 147) + "..." : str;
-  };
+  // Optional: Scroll to top when filters/search change significantly
+  useEffect(() => {
+    virtualizer.scrollToIndex(0, { align: 'start', behavior: 'auto' });
+  }, [searchTerm, filters.types, virtualizer]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -107,77 +73,16 @@ function TimelinePage() {
         title="Timeline"
         actions={
           <div className="flex items-center gap-3">
-            {/* Type Filter Dropdown */}
-            {/* Type Filter Dropdown Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="justify-start">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuGroup>
-                <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  {/* Select All / Clear */}
-                  <DropdownMenuItem
-                    onClick={() => {
-                      // Clear all current filters
-                      filters.types.forEach((type) => toggleTypeFilter(type));
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {filters.types.length === 0
-                      ? "✓ All Types"
-                      : "Clear All Filters"}
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  {/* Individual Type Filters */}
-                  {filterableTypes.map((type) => {
-                    const isSelected = filters.types.includes(type);
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={type}
-                        checked={isSelected}
-                        onCheckedChange={() => toggleTypeFilter(type)}
-                        className="cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-2 h-2 rounded-full ${typeColors[type] || "bg-gray-500"}`}
-                          />
-                          {type}
-                        </div>
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenuGroup>
-            </DropdownMenu>
-
-            {/* Search Input */}
+            <TypeFilterDropdown filters={filters} onToggleType={toggleTypeFilter} onClearFilters={clearFilters} />
             <Field>
               <InputGroup>
-                <InputGroupInput
-                  id="input-group-url"
-                  placeholder="example.com"
-                />
+                <InputGroupInput placeholder="Search events..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 <InputGroupAddon>
-                  <Search />
+                  <Search className="h-4 w-4" />
                 </InputGroupAddon>
               </InputGroup>
             </Field>
-
-            {/* Clear Button */}
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={clearTimeline}
-              className="flex items-center gap-2"
-            >
+            <Button variant="destructive" size="sm" onClick={clearTimeline} className="flex items-center gap-2">
               <Trash2 size={16} />
               Clear All
             </Button>
@@ -185,58 +90,40 @@ function TimelinePage() {
         }
       />
 
-      {/* Timeline List */}
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4" ref={parentRef}>
         {filteredTimeline.length === 0 ? (
-          <div className="flex h-[400px] flex-col items-center justify-center text-center">
+          <div className="flex h-100 flex-col items-center justify-center text-center">
             <div className="text-6xl mb-6 opacity-20">📭</div>
-            <h3 className="text-xl font-medium text-muted-foreground">
-              No matching events
-            </h3>
-            <p className="text-sm text-muted-foreground mt-2">
-              {searchTerm || filters.types.length > 0
-                ? "Try adjusting your search or type filter"
-                : "Connect your React Native app to see events in real-time"}
-            </p>
+            <h3 className="text-xl font-medium text-muted-foreground">No matching events</h3>
+            <p className="text-sm text-muted-foreground mt-2">{searchTerm || filters.types.length > 0 ? 'Try adjusting your search or type filter' : 'Connect your React Native app to see events in real-time'}</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredTimeline.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <CardHeader className="py-3 px-4 flex-row items-center justify-between border-b">
-                  <div className="flex items-center gap-3">
-                    <Badge className={`${getTypeColor(item.type)} text-white`}>
-                      {item.type}
-                    </Badge>
-                    <span className="text-xs font-mono text-muted-foreground">
-                      {format(new Date(item.timestamp), "HH:mm:ss.SSS")}
-                    </span>
-                  </div>
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualItems.map((virtualItem) => {
+              const event = filteredTimeline[virtualItem.index];
 
-                  {connections[item.connectionId] && (
-                    <span className="text-xs text-muted-foreground">
-                      {connections[item.connectionId].name ||
-                        connections[item.connectionId].address}
-                    </span>
-                  )}
-                </CardHeader>
-
-                <CardContent className="p-4">
-                  <pre className="text-sm bg-muted p-3 rounded-md overflow-x-auto font-mono whitespace-pre-wrap break-words">
-                    {formatPayload(item.payload)}
-                  </pre>
-
-                  <details className="mt-3 group">
-                    <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-                      View full raw message
-                    </summary>
-                    <pre className="mt-2 text-xs bg-zinc-950 text-zinc-200 p-4 rounded overflow-auto">
-                      {JSON.stringify(item.raw || item.payload, null, 2)}
-                    </pre>
-                  </details>
-                </CardContent>
-              </Card>
-            ))}
+              return (
+                <div
+                  key={event.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualItem.size}px`, // we'll make this dynamic next
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <TimelineEventRow item={event} connections={connections} />
+                </div>
+              );
+            })}
           </div>
         )}
       </ScrollArea>
